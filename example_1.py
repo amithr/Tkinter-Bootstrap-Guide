@@ -3,10 +3,15 @@ from ttkbootstrap.constants import *
 
 root = ttk.Window(themename="darkly")
 
-b1 = ttk.Button(root, text="Button 1", bootstyle=SUCCESS)
-b1.pack(side=LEFT, padx=5, pady=10)
+def open_dialog_1():
+    app = ttk.Toplevel(title="My Toplevel")
+    app.mainloop()
 
-b2 = ttk.Button(root, text="Button 2", bootstyle=(INFO, OUTLINE))
-b2.pack(side=LEFT, padx=5, pady=10)
+
+open_button = ttk.Button(root, text="Open", command=open_dialog, bootstyle=SUCCESS)
+open_button.pack(side=LEFT, padx=5, pady=10)
+
+exit_button = ttk.Button(root, text="Exit", bootstyle=(INFO, OUTLINE))
+exit_button.pack(side=LEFT, padx=5, pady=10)
 
 root.mainloop()
