@@ -2,85 +2,119 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.toast import ToastNotification
 from ttkbootstrap.tableview import Tableview
+from ttkbootstrap.validation import add_regex_validation
 
-app = ttk.Window("Data Entry", "superhero", resizable=(False, False))
-colors = app.style.colors
 
-main_frame = ttk.Frame(app, padding=(20,10))
-main_frame.pack(fill=BOTH, expand=YES)
+class Gradebook(ttk.Frame):
+    def __init__(self, master_window):
+        super().__init__(master_window, padding=(20,10))
+        self.pack(fill=BOTH, expand=YES)
+        self.name = ttk.StringVar(value="")
+        self.student_id = ttk.StringVar(value="")
+        self.course_name = ttk.StringVar(value="")
+        self.final_score = ttk.DoubleVar(value=0)
+        self.data = []
+        self.colors = master_window.style.colors
 
-data=[]
+        instruction_text = "Please enter your contact information: " 
+        instruction = ttk.Label(self, text=instruction_text, width=50)
+        instruction.pack(fill=X, pady=10)
 
- # form variables
-name_val = ttk.StringVar(value="")
-student_id_val = ttk.StringVar(value="")
-course_name_val = ttk.StringVar(value="")
-final_score_val = ttk.IntVar(value=0)
+        self.create_form_entry("Name: ", self.name)
+        self.create_form_entry("Student ID: ", self.student_id)
+        self.create_form_entry("Course Name: ", self.course_name)
+        self.final_score_input = self.create_form_entry("Final Score: ", self.final_score)
+        self.create_meter()
+        self.create_buttonbox()
 
-# form header
-instruction_text = "Please enter your contact information" 
-instruction = ttk.Label(app, text=instruction_text, width=50)
-instruction.pack(fill=X, pady=10)
+        self.table = self.create_table()
 
-def initialize_meter(app, int_variable):
-    meter = ttk.Meter(
-    metersize=100,
-    padding=5,
-    amounttotal=100,
-    amountused=50,
-    metertype="full",
-    subtext="Final Score",
-    interactive=True,
-    )
+    
+    def create_form_entry(self, label, variable):
+        form_field_container = ttk.Frame(self)
+        form_field_container.pack(fill=X, expand=YES, pady=5)
 
-    meter.pack()
+        form_field_label = ttk.Label(master=form_field_container, text=label, width=15)
+        form_field_label.pack(side=LEFT, padx=12)
 
-    final_score_label = ttk.Label(text="Final Score: ", width=10)
-    final_score_label.pack(side=LEFT, padx=5)
+        form_input = ttk.Entry(master=form_field_container, textvariable=variable)
+        form_input.pack(side=LEFT, padx=5, fill=X, expand=YES)
 
-    int_variable.set(meter.amountusedvar)
+        add_regex_validation(form_input, r'^[a-zA-Z0-9_]*$')
 
-    final_score_input = ttk.Entry(textvariable=meter.amountusedvar)
-    final_score_input.pack(side=LEFT, padx=5, fill=X, expand=YES)
+        return form_input
+    
+    def create_buttonbox(self):
+        button_container = ttk.Frame(self)
+        button_container.pack(fill=X, expand=YES, pady=(15, 10))
 
-    return meter
+        cancel_btn = ttk.Button(
+            master=button_container,
+            text="Cancel",
+            command=self.on_cancel,
+            bootstyle=DANGER,
+            width=6,
+        )
 
-def initialize_table(app, data):
-    coldata = [
-        {"text": "Name"},
-        {"text": "Student ID", "stretch": False},
-        {"text": "Course Name"},
-        {"text": "Final Score", "stretch": False}
-    ]
+        cancel_btn.pack(side=RIGHT, padx=5)
 
-    dt = Tableview(
-    master=app,
-    coldata=coldata,
-    rowdata=data,
-    paginated=True,
-    searchable=True,
-    bootstyle=PRIMARY,
-    stripecolor=(colors.light, None),
-)
-    return
+        submit_btn = ttk.Button(
+            master=button_container,
+            text="Submit",
+            command=self.on_submit,
+            bootstyle=SUCCESS,
+            width=6,
+        )
 
-def create_form_entry(app, label, string_variable):
-    form_field_container = ttk.Frame(app)
-    form_field_container.pack(fill=X, expand=YES, pady=5)
+        submit_btn.pack(side=RIGHT, padx=5)
+    
+    def create_meter(self):
+        meter = ttk.Meter(
+            master=self,
+            metersize=150,
+            padding=5,
+            amounttotal=100,
+            amountused=50,
+            metertype="full",
+            subtext="Final Score",
+            interactive=True,
+        )
 
-    form_field_label = ttk.Label(master=form_field_container, text=label.title(), width=10)
-    form_field_label.pack(side=LEFT, padx=5)
+        meter.pack()
 
-    form_input = ttk.Entry(master=form_field_container, textvariable=string_variable)
-    form_input.pack(side=LEFT, padx=5, fill=X, expand=YES)
 
-def on_submit(app):
+        self.final_score.set(meter.amountusedvar)
+        self.final_score_input.configure(textvariable=meter.amountusedvar)
+    
+    def create_table(self):
+        coldata = [
+            {"text": "Name"},
+            {"text": "Student ID", "stretch": False},
+            {"text": "Course Name"},
+            {"text": "Final Score", "stretch": False}
+        ]
+
+        print(self.data)
+
+        table = Tableview(
+            master=self,
+            coldata=coldata,
+            rowdata=self.data,
+            paginated=True,
+            searchable=True,
+            bootstyle=PRIMARY,
+            stripecolor=(self.colors.light, None),
+        )
+
+        table.pack(fill=BOTH, expand=YES, padx=10, pady=10)
+        return table
+
+    def on_submit(self):
         """Print the contents to console and return the values."""
-        name = name_val.get()
-        student_id = student_id_val.get()
-        course_name = course_name_val.get()
-        final_score = final_score_val.get()
-
+        name = self.name.get()
+        student_id = self.student_id.get()
+        course_name = self.course_name.get()
+        final_score = self.final_score.get()
 
         print("Name:", name)
         print("Student ID: ", student_id)
@@ -95,43 +129,18 @@ def on_submit(app):
 
         toast.show_toast()
 
-        data.append((name, student_id, course_name, final_score))
+        # Refresh table
+        self.data.append((name, student_id, course_name, final_score))
+        self.table.destroy()
+        self.table = self.create_table()
 
-        return name, student_id, course_name, final_score
+    def on_cancel(self):
+        """Cancel and close the application."""
+        self.quit()
 
-def on_cancel(app):
-    """Cancel and close the application."""
-    app.quit()
 
-def create_buttonbox(app):
-    button_container = ttk.Frame(app)
-    button_container.pack(fill=X, expand=YES, pady=(15, 10))
+if __name__ == "__main__":
 
-    submit_btn = ttk.Button(
-        master=button_container,
-        text="Submit",
-        command=on_submit(app),
-        bootstyle=SUCCESS,
-        width=6,
-    )
-    submit_btn.pack(side=RIGHT, padx=5)
-    submit_btn.focus_set()
-
-    cancel_btn = ttk.Button(
-        master=button_container,
-        text="Cancel",
-        command=on_cancel(app),
-        bootstyle=DANGER,
-        width=6,
-    )
-
-    cancel_btn.pack(side=RIGHT, padx=5)
-
-# form entries
-create_form_entry(app, "Name: ", name_val)
-create_form_entry(app, "Student ID: ", student_id_val)
-create_form_entry(app, "Course Name: ", course_name_val)
-# update the amount used with another widget
-meter = initialize_meter(app, final_score_val)
-
-app.mainloop()
+    app = ttk.Window("Gradebook", "superhero", resizable=(False, False))
+    Gradebook(app)
+    app.mainloop()
